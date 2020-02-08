@@ -66,13 +66,14 @@ for user in user_array:
   spoon_eating, spoon_non_eating = split_IMU(spoon_eating_tuples, IMU_spoon_np)
 
   eating = np.vstack((fork_eating, spoon_eating))
+
+  fork_non_eating = fork_non_eating[:fork_eating.shape[0]]
+  spoon_non_eating = spoon_non_eating[:spoon_eating.shape[0]]
+
   non_eating = np.vstack((fork_non_eating, spoon_non_eating))
 
-  sample_number = eating.shape[0]
-  non_eating = non_eating[:sample_number]
-
-  eating_val = np.ones((sample_number,1))
-  non_eating_val = np.zeros((sample_number,1))
+  eating_val = np.ones((eating.shape[0],1))
+  non_eating_val = np.zeros((non_eating.shape[0],1))
 
   eating = np.hstack((eating, eating_val))
   non_eating = np.hstack((non_eating, non_eating_val))
