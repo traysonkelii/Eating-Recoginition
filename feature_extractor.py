@@ -2,23 +2,34 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pywt 
 import math
+from sklearn import decomposition 
+from sklearn.preprocessing import StandardScaler
+import seaborn as sns
+import pandas as pd
 
 def normalize(matrix):
   return matrix / np.linalg.norm(matrix)
 
-def plot_and_show_split(eat, non):
-  plt.subplot(1,2,1)
-  plt.plot(eat, 'go', markersize=1)
-  plt.title('Eat')
-  plt.subplot(1,2,2)
-  plt.plot(non, 'ro', markersize=1)
-  plt.title('Non-Eat')
-  plt.show()
+def plot_and_show_join(eat, non, title='No title'):
 
-def plot_and_show_join(eat, non, title='Meh'):
+  plt.subplot(1,3,1)
+  plt.plot(eat, 'go', markersize=1)
+  plt.title('EAT '+title)
+  plt.xlabel('Time')
+  plt.ylabel('Output')
+
+  plt.subplot(1,3,2)
+  plt.plot(non, 'ro', markersize=1)
+  plt.title('NON-EAT '+title)
+  plt.xlabel('Time')
+  plt.ylabel('Output')
+
+  plt.subplot(1,3,3)
   plt.plot(eat, 'go', markersize=1)
   plt.plot(non, 'ro', markersize=1)
-  plt.title(title)
+  plt.xlabel('Time')
+  plt.ylabel('Output')
+  plt.title('COMBINED '+title)
   plt.show()
 
 def std_for_acc(matrix):
@@ -114,13 +125,6 @@ def fft_row(matrix):
     val = np.fft.fft(rows[1:11])
     fft.append(val)
   return np.matrix(fft)
-
-def get_db(matrix):
-  db = []
-  for rows in matrix: 
-    _, row_db = pywt.dwt(rows[1:11], 'db36')
-    db.append(row_db)
-  return np.matrix(db).transpose()
 
 def normalize_all(eating, non_eating):
   e_col1 = normalize(eating[:,1])
@@ -278,8 +282,20 @@ def fft_rows(eating, non_eating):
   n_rows.append(n_10)
   return e_rows, n_rows
 
-eating = np.load('IMU_numpy_arrays/user12eating.npy')
-non_eating = np.load('IMU_numpy_arrays/user12non_eating.npy')
+eating = np.load('IMU_numpy_arrays/user23eating.npy')
+non_eating = np.load('IMU_numpy_arrays/user23non_eating.npy')
+
+# eating = np.load('IMU_numpy_arrays/user09eating.npy')
+# non_eating = np.load('IMU_numpy_arrays/user09non_eating.npy')
+
+# eating = np.load('IMU_numpy_arrays/user11eating.npy')
+# non_eating = np.load('IMU_numpy_arrays/user11non_eating.npy')
+
+# eating = np.load('IMU_numpy_arrays/user17eating.npy')
+# non_eating = np.load('IMU_numpy_arrays/user17non_eating.npy')
+
+# eating = np.load('IMU_numpy_arrays/user31eating.npy')
+# non_eating = np.load('IMU_numpy_arrays/user31non_eating.npy')
 
 eating, non_eating = normalize_all(eating, non_eating)
 
@@ -327,57 +343,183 @@ n_row_coif = coif_wave(non_eating)
 e_row_db = db_wave(eating)
 n_row_db = db_wave(non_eating)
 
-print('STD EACH ROW: ', e_std.shape)
-print('STD ACCELEROMETER: ', e_std_acc.shape)
-print('STD ORIENTATION: ', e_std_ori.shape)
-print('STD GYROSCOPE: ',e_std_gyr.shape)
-print('FFT EACH ROW: ', e_fft.shape)
-print('FFT COL SHAPE: ', e_row_fft[0].shape)
-print('DIST ORIENTATION: ', e_ori_dist.shape)
-print('DIST ACCELEROMETER: ', e_acc_dist.shape)
-print('DIST GYROSCOPE: ', e_gyro_dist.shape)
-print('AVERAGE OF EACH ROW: ', e_ave.shape)
-print('COIF SHAPE: ', e_coif[0].shape)
-print('DMEY SHAPE: ', e_dmey[0].shape)
-print('DB SHAPE: ', e_db[0].shape)
-print('DMEY Each Row: ', e_row_dmey.shape)
-print('COIF Each Row: ', e_row_coif.shape)
-print('DB Each Row: ', e_row_db.shape)
-print(pywt.wavelist(kind='discrete'))
+# print(pywt.wavelist(kind='discrete'))
 
-plot_and_show_join(e_std, n_std, 'Standard Deviation')
-plot_and_show_join(e_std_acc, n_std_acc, 'STD ACCELEROMETER')
-plot_and_show_join(e_std_ori, n_std_ori, 'STD ORIENTATION')
-plot_and_show_join(e_std_gyr, n_std_gyr, 'STD GYROSCOPE')
-plot_and_show_join(e_fft, n_fft, 'FFT')
+# plot_and_show_join(e_std, n_std, 'SD EACH ROW')
+# plot_and_show_join(e_std_acc, n_std_acc, 'SD ACCELEROMETER')
+# plot_and_show_join(e_std_ori, n_std_ori, 'SD ORIENTATION')
+# plot_and_show_join(e_std_gyr, n_std_gyr, 'SD GYROSCOPE')
+# plot_and_show_join(e_fft, n_fft, 'FFT EACH ROW')
+# for i in range(10):
+#   plot_and_show_join(e_row_fft[i], n_row_fft[i], 'FFT COL '+str(i + 1))
+# plot_and_show_join(e_ori_dist, n_ori_dist, 'ED ORIENTATION')
+# plot_and_show_join(e_acc_dist, n_acc_dist, 'ED ACCELEROMETER')
+# plot_and_show_join(e_gyro_dist, n_gyro_dist, 'ED GYROSCOPE')
+# plot_and_show_join(e_ave, n_ave, 'AVERAGE EACH ROW')
+# for i in range(10):
+#   plot_and_show_join(e_coif[i], n_coif[i], 'COIF COL '+str(i + 1))
+# for i in range(10):
+#   plot_and_show_join(e_dmey[i], n_dmey[i], 'DMEY COL '+str(i + 1))
+# print(len(e_db))
+# for i in range(10):
+#   plot_and_show_join(e_db[i], n_db[i], 'DB COL '+str(i + 1))
+# plot_and_show_join(e_row_dmey, n_row_dmey, 'DMEY EACH ROW')
+# plot_and_show_join(e_row_coif, n_row_coif, 'COIF EACH ROW')
+# plot_and_show_join(e_row_db, n_row_db, 'DB EACH ROW')
+
+# print('STD EACH ROW: ', e_std.shape)
+# print('STD ACCELEROMETER: ', e_std_acc.shape)
+# print('STD ORIENTATION: ', e_std_ori.shape)
+# print('STD GYROSCOPE: ',e_std_gyr.shape)
+# print('FFT EACH ROW: ', e_fft.shape)
+# print('FFT COL SHAPE: ', e_row_fft[0].shape)
+# print('DIST ORIENTATION: ', e_ori_dist.shape)
+# print('DIST ACCELEROMETER: ', e_acc_dist.shape)
+# print('DIST GYROSCOPE: ', e_gyro_dist.shape)
+# print('AVERAGE OF EACH ROW: ', e_ave.shape)
+# print('COIF SHAPE: ', e_coif[0].shape)
+# print('DMEY SHAPE: ', e_dmey[0].shape)
+# print('DB SHAPE: ', e_db[0].shape)
+# print('DMEY Each Row: ', e_row_dmey.shape)
+# print('COIF Each Row: ', e_row_coif.shape)
+# print('DB Each Row: ', e_row_db.shape)
+
+smallest_shape = e_dmey[0].shape[0]
+
+e_row_dmey = e_row_dmey[:smallest_shape]
+n_row_dmey = n_row_dmey[:smallest_shape]
+e_row_coif = e_row_coif[:smallest_shape]
+n_row_coif = n_row_coif[:smallest_shape]
+e_row_db = e_row_db[:smallest_shape]
+n_row_db = n_row_db[:smallest_shape]
+e_std = e_std[:smallest_shape]
+n_std = n_std[:smallest_shape]
+e_std_acc = e_std_acc[:smallest_shape]
+n_std_acc = n_std_acc[:smallest_shape]
+e_std_ori = e_std_ori[:smallest_shape]
+n_std_ori = n_std_ori[:smallest_shape]
+e_std_gyr = e_std_gyr[:smallest_shape]
+n_std_gyr = n_std_gyr[:smallest_shape]
+e_fft = e_fft[:smallest_shape]
+n_fft = n_fft[:smallest_shape]
 for i in range(10):
-  plot_and_show_join(e_row_fft[i], n_row_fft[i], 'FFT Column '+str(i))
-plot_and_show_join(e_ori_dist, n_ori_dist, 'Euclidean Orientation')
-plot_and_show_join(e_acc_dist, n_acc_dist, 'Euclidean Acceleromter')
-plot_and_show_join(e_gyro_dist, n_gyro_dist, 'Euclidean Gyroscope')
-plot_and_show_join(e_ave, n_ave, 'Average')
+  e_row_fft[i] = e_row_fft[i][:smallest_shape]
+  n_row_fft[i] = n_row_fft[i][:smallest_shape]
+  e_coif[i] = e_coif[i][:smallest_shape]
+  n_coif[i] = n_coif[i][:smallest_shape]
+  e_db[i] = e_db[i][:smallest_shape]
+  n_db[i] = n_db[i][:smallest_shape]
+  e_dmey[i] = e_dmey[i][:smallest_shape]
+  n_dmey[i] = n_dmey[i][:smallest_shape]
+e_ori_dist = e_ori_dist[:smallest_shape]
+n_ori_dist = n_ori_dist[:smallest_shape]
+e_acc_dist = e_acc_dist[:smallest_shape]
+n_acc_dist = n_acc_dist[:smallest_shape]
+e_gyro_dist = e_gyro_dist[:smallest_shape]
+n_gyro_dist = n_gyro_dist[:smallest_shape]
+e_ave = e_ave[:smallest_shape]
+n_ave = n_ave[:smallest_shape]
+
+eating_features = eating[:smallest_shape,1:11]
+eating_features = np.hstack((eating_features, e_std, e_std_acc, e_std_ori, e_std_gyr, e_fft, e_ori_dist, e_acc_dist, e_gyro_dist, e_ave,e_row_dmey,e_row_coif,e_row_db))
 for i in range(10):
-  plot_and_show_join(e_coif[i], n_coif[i], 'COIF COL '+str(i))
+  e_row_fft[i] = e_row_fft[i].reshape(-1,1)
+  e_coif[i] = e_coif[i].reshape(-1,1)
+  e_dmey[i] = e_dmey[i].reshape(-1,1)
+  e_db[i] = e_db[i].reshape(-1,1)
+  eating_features = np.hstack((eating_features, e_row_fft[i]))
+  eating_features = np.hstack((eating_features, e_row_fft[i][:], e_coif[i][:smallest_shape], e_dmey[i][:], e_db[i]))
+
+smallest_shape = n_dmey[0].shape[0]
+
+non_eating_features = non_eating[:smallest_shape,1:11]
+non_eating_features = np.hstack((non_eating_features, n_std, n_std_acc, n_std_ori, n_std_gyr, n_fft, n_ori_dist, n_acc_dist, n_gyro_dist, n_ave,n_row_dmey,n_row_coif,n_row_db))
 for i in range(10):
-  plot_and_show_join(e_dmey[i], n_dmey[i], 'DMEY COL '+str(i))
-print(len(e_db))
-for i in range(10):
-  plot_and_show_join(e_db[i], n_db[i], 'DB COL '+str(i))
-plot_and_show_join(e_row_dmey, n_row_dmey, 'DMEY Each Row')
-plot_and_show_join(e_row_coif, n_row_coif, 'COIF Each Row')
-plot_and_show_join(e_row_db, n_row_db, 'DB Each Row')
+  n_row_fft[i] = n_row_fft[i].reshape(-1,1)
+  n_coif[i] = n_coif[i].reshape(-1,1)
+  n_dmey[i] = n_dmey[i].reshape(-1,1)
+  n_db[i] = n_db[i].reshape(-1,1)
+  non_eating_features = np.hstack((non_eating_features, n_row_fft[i]))
+  non_eating_features = np.hstack((non_eating_features, n_row_fft[i][:], n_coif[i][:smallest_shape], n_dmey[i][:], n_db[i]))
 
 
+# U = left orthogonal matrix, holds important, nonredundant information about observations
+# V = right orthogonal matrix, holds important, nonredundant information on features
+# S = diagonal matrix, contains all of the information about decomposition process performed during the compression
 
-# print(e_db_coe1)
-
-
-# wavelet coefficient: Abrupt transitions in signals result in wavelet coefficients with large absolute values.
-
-# keep dmey
-
+u, s, v = np.linalg.svd(eating_features)
 
 
 
 
+var_explained = np.round(s**2/np.sum(s**2), decimals=3)
+ 
+# sns.barplot(x=list(range(1,len(var_explained)+1)),
+#             y=var_explained, color="limegreen")
+# plt.xlabel('SVs', fontsize=16)
+# plt.ylabel('Percent Variance Explained', fontsize=16)
+# plt.savefig('svd_scree_plot.png',dpi=100)
+# plt.show()
+eating_v = v[:,:5]
+# plt.plot(v[:,:5])
+# plt.show()
 
+u, s, v = np.linalg.svd(non_eating_features)
+
+
+
+
+var_explained = np.round(s**2/np.sum(s**2), decimals=3)
+ 
+sns.barplot(x=list(range(1,len(var_explained)+1)),
+            y=var_explained, color="limegreen")
+plt.xlabel('SVs', fontsize=16)
+plt.ylabel('Percent Variance Explained', fontsize=16)
+plt.savefig('svd_scree_plot.png',dpi=100)
+plt.show()
+
+
+plt.subplot(1,2,1)
+plt.plot(v[:,:5])
+
+plt.subplot(1,2,2)
+plt.plot(eating_v)
+plt.show()
+
+
+
+# plt.subplot(2,3,1)
+# plt.plot(u[:,0])
+
+# plt.subplot(2,3,2)
+# plt.plot(u[:,1])
+
+# plt.subplot(2,3,3)
+# plt.plot(u[:,2])
+
+# plt.subplot(2,3,4)
+# plt.plot(u[:,3])
+
+# plt.subplot(2,3,5)
+# plt.plot(u[:,4])
+# plt.show()
+
+
+# print(np.diag(s))
+# print(np.diag(s).shape)
+
+# S = np.zeros((eating_features.shape[0], eating_features.shape[1]))
+# S[:eating_features.shape[0], :eating_features.shape[0]] = np.diag(s)
+
+# n_component = 5
+
+# S = S[:, :n_component]
+# V = V[:n_component, :]
+
+# A = U.dot(Sigma.dot(V))
+
+# print(A)
+
+# print(U.shape)
+# print(S[0])
+# print(V.shape)
